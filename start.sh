@@ -16,6 +16,16 @@ trap cleanup SIGINT SIGTERM
 
 echo -e "\033[0;32m🚀 Starting Rotary Arts Platform Development Environment...\033[0m"
 
+# Install Node.js if not installed
+if ! command -v node &> /dev/null; then
+    echo -e "\n\033[0;33m⚠️ Node.js not found. Installing Node.js via nvm...\033[0m"
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    nvm install 20
+    nvm use 20
+fi
+
 # 1. Start Docker services (Database)
 if [ -f "docker-compose.yml" ]; then
   echo -e "\n\033[0;34m📦 Starting Database (Docker)...\033[0m"
