@@ -93,8 +93,8 @@ done
 # 4. Optional: Run Migrations/Push (Drizzle)
 echo -e "\n\033[0;34m🗄️  Syncing database schema...\033[0m"
 if [ -d "backend" ]; then
-  # Automatically say yes to data loss during dev for simplicity
-  cd backend && echo "y" | npx drizzle-kit push || echo -e "\033[0;33m⚠️ Database sync skipped or failed. Ensure DB is running and .env is correct.\033[0m"
+  # Use force push since we are not in a TTY environment to say yes to data loss warnings
+  cd backend && npx drizzle-kit push --force || echo -e "\033[0;33m⚠️ Database sync skipped or failed. Ensure DB is running and .env is correct.\033[0m"
   cd ..
 fi
 
