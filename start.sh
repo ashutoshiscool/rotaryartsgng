@@ -8,6 +8,8 @@ cleanup() {
   echo -e "\n\033[0;31mStopping all services...\033[0m"
   # Kill all child processes of this script
   pkill -P $$ || true
+  fuser -k 3000/tcp || true
+  fuser -k 3001/tcp || true
   exit
 }
 
@@ -91,9 +93,14 @@ done
 # 4. Optional: Run Migrations/Push (Drizzle)
 echo -e "\n\033[0;34m🗄️  Syncing database schema...\033[0m"
 if [ -d "backend" ]; then
-  cd backend && npx drizzle-kit push || echo -e "\033[0;33m⚠️ Database sync skipped or failed. Ensure DB is running and .env is correct.\033[0m"
+  # Automatically say yes to data loss during dev for simplicity
+  cd backend && echo "y" | npx drizzle-kit push || echo -e "\033[0;33m⚠️ Database sync skipped or failed. Ensure DB is running and .env is correct.\033[0m"
   cd ..
 fi
+
+# Kill any existing processes on port 3000 and 3001 to prevent address in use errors
+fuser -k 3000/tcp || true
+fuser -k 3001/tcp || true
 
 # 5. Start Backend
 echo -e "\n\033[0;34m⚙️  Starting Backend (Port 3001)...\033[0m"
