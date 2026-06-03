@@ -42,43 +42,54 @@ if ! command -v node &> /dev/null; then
     nvm use 20
 fi
 
-# 1. Start Docker services (Database)
-if [ -f "docker-compose.yml" ]; then
-  echo -e "\n\033[0;34m📦 Starting Database (Docker)...\033[0m"
-  if command -v docker-compose &> /dev/null; then
-    docker-compose up -d
-  elif docker compose version &> /dev/null; then
-    docker compose up -d
-  else
-    echo -e "\n\033[0;31m❌ Docker or Docker Compose not found.\033[0m"
-    echo -e "Please install Docker and Docker Compose, or ensure local PostgreSQL is running."
-    # If the user has a local Postgres, we can try to proceed
-    if ! pg_isready &> /dev/null; then
-      echo -e "\033[0;31mError: No database service found.\033[0m"
-      exit 1
-    else
-      echo -e "\033[0;32mLocal PostgreSQL detected, proceeding...\033[0m"
-    fi
-  fi
-  # Wait for DB to be ready
-  sleep 2
-else
-  echo -e "\n\033[0;33m⚠️ No docker-compose.yml found. Checking local Postgres...\033[0m"
-  if ! pg_isready &> /dev/null; then
-    echo -e "\033[0;31mError: No database found and no docker-compose.yml present.\033[0m"
-    # exit 1 
-  fi
-fi
-
-# 2. Setup Environment Files if missing
+# 1. Setup Environment Files if missing
 if [ ! -f "backend/.env" ] && [ -f "backend/.env.example" ]; then
-  echo -e "\033[0;34m📄 Creating backend/.env from .env.example...\033[0m"
+  echo -e "\n\033[0;34m📄 Creating backend/.env from .env.example...\033[0m"
   cp backend/.env.example backend/.env
 fi
 
 if [ ! -f "frontend/.env" ] && [ -f "frontend/.env.example" ]; then
   echo -e "\033[0;34m📄 Creating frontend/.env from .env.example...\033[0m"
   cp frontend/.env.example frontend/.env
+fi
+
+# 2. Start Docker services (Database) - Only if using local DB
+USE_LOCAL_DB=true
+if [ -f "backend/.env" ]; then
+  # Extract the DATABASE_URL and check if it points to a local or remote database
+  DB_URL=$(grep "^DATABASE_URL=" backend/.env | cut -d '=' -f2- || true)
+  if [[ "$DB_URL" != *"localhost"* ]] && [[ "$DB_URL" != *"127.0.0.1"* ]] && [[ "$DB_URL" != "" ]]; then
+    USE_LOCAL_DB=false
+    echo -e "\n\033[0;32m☁️  Remote Database detected (e.g. Supabase). Skipping local Docker Postgres.\033[0m"
+  fi
+fi
+
+if [ "$USE_LOCAL_DB" = true ]; then
+  if [ -f "docker-compose.yml" ]; then
+    echo -e "\n\033[0;34m📦 Starting Database (Docker)...\033[0m"
+    if command -v docker-compose &> /dev/null; then
+      docker-compose up -d
+    elif docker compose version &> /dev/null; then
+      docker compose up -d
+    else
+      echo -e "\n\033[0;31m❌ Docker or Docker Compose not found.\033[0m"
+      echo -e "Please install Docker and Docker Compose, or ensure local PostgreSQL is running."
+      # If the user has a local Postgres, we can try to proceed
+      if ! pg_isready &> /dev/null; then
+        echo -e "\033[0;31mError: No database service found.\033[0m"
+        exit 1
+      else
+        echo -e "\033[0;32mLocal PostgreSQL detected, proceeding...\033[0m"
+      fi
+    fi
+    # Wait for DB to be ready
+    sleep 2
+  else
+    echo -e "\n\033[0;33m⚠️ No docker-compose.yml found. Checking local Postgres...\033[0m"
+    if ! pg_isready &> /dev/null; then
+      echo -e "\033[0;31mError: No database found and no docker-compose.yml present.\033[0m"
+    fi
+  fi
 fi
 
 # 3. Check node_modules and Install if missing
