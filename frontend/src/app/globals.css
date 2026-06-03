@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .mesh-bg {
+    background-color: #ffffff;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(330, 100%, 46%, 0.15) 0, transparent 50%), 
+      radial-gradient(at 50% 0%, hsla(197, 100%, 47%, 0.1) 0, transparent 50%), 
+      radial-gradient(at 100% 0%, hsla(57, 100%, 50%, 0.1) 0, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  .glass-pill {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  @keyframes mesh {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .animate-mesh {
+    background-size: 200% 200%;
+    animation: mesh 15s ease infinite;
+  }
+}

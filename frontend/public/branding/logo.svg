@@ -1,0 +1,67 @@
+<svg width="400" height="500" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rotary Arts Official Branding (SVG Replica) -->
+  <defs>
+    <style>
+      .rotary { fill: #FFFFFF; }
+      .magenta { fill: #E11D74; }
+      .cyan { fill: #00AEEF; }
+      .yellow { fill: #FFF200; }
+    </style>
+  </defs>
+
+  <!-- Row 1 -->
+  <g transform="translate(60, 60)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+  <g transform="translate(200, 60)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+  <g transform="translate(340, 60)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(60, 180)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+  <g transform="translate(200, 180)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+  <g transform="translate(340, 180) rotate(45)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="cyan"/>
+    <circle cx="0" cy="0" r="18" class="cyan"/>
+  </g>
+
+  <!-- Row 3 -->
+  <g transform="translate(60, 300) rotate(90)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="magenta"/>
+    <circle cx="0" cy="0" r="18" class="magenta"/>
+  </g>
+  <g transform="translate(200, 300)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+  <g transform="translate(340, 300)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+
+  <!-- Row 4 -->
+  <g transform="translate(60, 420)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+  <g transform="translate(200, 420) rotate(-45)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="yellow"/>
+    <circle cx="0" cy="0" r="18" class="yellow"/>
+  </g>
+  <g transform="translate(340, 420)">
+    <rect x="-30" y="-10" width="60" height="20" rx="10" class="rotary"/>
+    <circle cx="0" cy="0" r="18" class="rotary"/>
+  </g>
+</svg>

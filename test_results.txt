@@ -1,0 +1,11 @@
+TOKEN_LEN: 0
+HEALTH: {"status":"ok","dbConnection":"healthy"}
+BOOKINGS: 1
+EVENTS: 1
+TASKS: 1
+CALENDAR: 1
+USERS: 1
+ADMIN_STATS: {"error":"Unauthorized"}
+SETTINGS: {"error":"Unauthorized"}
+COMMENTS: 1
+DONE
