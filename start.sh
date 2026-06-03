@@ -16,6 +16,20 @@ trap cleanup SIGINT SIGTERM
 
 echo -e "\033[0;32m🚀 Starting Rotary Arts Platform Development Environment...\033[0m"
 
+# Install curl if not installed
+if ! command -v curl &> /dev/null; then
+    echo -e "\n\033[0;33m⚠️ curl not found. Installing curl...\033[0m"
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update && sudo apt-get install -y curl
+    elif command -v yum &> /dev/null; then
+        sudo yum install -y curl
+    elif command -v brew &> /dev/null; then
+        brew install curl
+    else
+        echo -e "\033[0;31m❌ Could not install curl automatically. Please install it manually.\033[0m"
+    fi
+fi
+
 # Install Node.js if not installed
 if ! command -v node &> /dev/null; then
     echo -e "\n\033[0;33m⚠️ Node.js not found. Installing Node.js via nvm...\033[0m"
