@@ -32,15 +32,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Ensure uploads directory exists
-const uploadDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
 
 app.get('/system/health', async (req, res) => {
   try {

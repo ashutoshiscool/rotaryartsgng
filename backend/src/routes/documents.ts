@@ -4,22 +4,13 @@ import { documents, activityLogs, eventAssignments, tasks, bookings, events } fr
 import { eq, inArray } from 'drizzle-orm';
 import { authenticate, AuthRequest, checkEventAccess } from '../middleware/auth';
 import multer from 'multer';
-import path from 'path';
+import { uploadToSupabase } from '../utils/supabase';
 
 const router = Router();
 router.use(authenticate);
 
-// Configure Multer for File Uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  },
-});
-
+// Configure Multer for memory storage
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 router.get('/', async (req: AuthRequest, res: Response) => {
@@ -68,8 +59,18 @@ router.post('/', upload.single('file'), checkEventAccess, async (req: AuthReques
       }
     }
 
-    // Determine URL (Local Path)
-    const fileUrl = req.file ? `/uploads/${req.file.filename}` : req.body.url;
+    // Determine URL (Local Path -> Supabase Storage)
+    let fileUrl = req.body.url;
+    
+    if (req.file) {
+      const uploadedUrl = await uploadToSupabase(req.file.buffer, req.file.originalname, req.file.mimetype);
+      if (uploadedUrl) {
+        fileUrl = uploadedUrl;
+      } else {
+        res.status(500).json({ error: 'Failed to upload to Supabase' });
+        return;
+      }
+    }
 
     if (!fileUrl) {
       res.status(400).json({ error: 'No file uploaded or URL provided' });
