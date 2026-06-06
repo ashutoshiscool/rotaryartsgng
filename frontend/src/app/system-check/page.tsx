@@ -21,9 +21,8 @@ export default function SystemCheck() {
     try {
       const { data } = await api.get('/system/health');
       if (data.status === 'ok') addResult('Backend Health', 'pass', data);
-      else throw new Error('Health check error');
     } catch (err: any) {
-      addResult('Backend Health', 'fail', err.message);
+      addResult('Backend Health', 'fail', err.response?.data?.error || err.message);
       setRunning(false);
       return;
     }
@@ -38,7 +37,7 @@ export default function SystemCheck() {
       localStorage.setItem('token', token);
       addResult('Login (Auth)', 'pass');
     } catch (err: any) {
-      addResult('Login (Auth)', 'fail', err.message);
+      addResult('Login (Auth)', 'fail', err.response?.data?.error || err.message);
       setRunning(false);
       return;
     }
