@@ -54,7 +54,7 @@ export async function registerAction(data: any) {
     
     return { success: true, token, user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role } };
   } catch (error: any) {
-    console.error("loginAction ERROR:", error); return { error: String(error) };
+    console.error("loginAction ERROR:", error); return { error: String(error) + "\nCause: " + String(error.cause) };
   }
 }
 
@@ -84,7 +84,7 @@ export async function loginAction(data: any) { console.error("loginAction START"
     
     return { success: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
   } catch (error: any) {
-    console.error("loginAction ERROR:", error); return { error: String(error) };
+    console.error("loginAction ERROR:", error); return { error: String(error) + "\nCause: " + String(error.cause) };
   }
 }
 
