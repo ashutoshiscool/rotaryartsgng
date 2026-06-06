@@ -35,7 +35,9 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 
-app.get('/system/health', async (req, res) => {
+const apiRouter = express.Router();
+
+apiRouter.get('/system/health', async (req, res) => {
   try {
     const result = await db.select().from(users).limit(1);
     res.json({ status: 'ok', dbConnection: 'healthy' });
@@ -44,8 +46,6 @@ app.get('/system/health', async (req, res) => {
     res.status(500).json({ status: 'error', dbConnection: 'unhealthy', error: String(error) });
   }
 });
-
-const apiRouter = express.Router();
 
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/bookings', bookingsRoutes);
