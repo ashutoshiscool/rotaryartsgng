@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
+import WebSocket from 'ws';
+
+Object.assign(global, { WebSocket });
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
@@ -11,7 +14,9 @@ if (!supabaseUrl || !supabaseKey) {
   console.warn("WARNING: SUPABASE_URL and SUPABASE_ANON_KEY must be provided in the environment variables.");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false }
+});
 
 export async function uploadToSupabase(buffer: Buffer, originalName: string, mimeType: string, bucket: string = 'rotaryarts'): Promise<string | null> {
     if (!buffer || buffer.length === 0) return null;

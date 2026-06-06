@@ -45,20 +45,28 @@ app.get('/system/health', async (req, res) => {
   }
 });
 
-app.use('/auth', authRoutes);
-app.use('/bookings', bookingsRoutes);
-app.use('/events', eventsRoutes);
-app.use('/tasks', tasksRoutes);
-app.use('/artists', artistsRoutes);
-app.use('/documents', documentsRoutes);
-app.use('/users', usersRoutes);
-app.use('/technical', technicalRoutes);
-app.use('/hospitality', hospitalityRoutes);
-app.use('/admin', adminRoutes);
-app.use('/calendar', calendarRoutes);
-app.use('/comments', commentsRoutes);
-app.use('/reminders', remindersRoutes);
+const apiRouter = express.Router();
 
-app.listen(Number(port), '0.0.0.0', () => {
-  console.log(`Backend server listening at http://0.0.0.0:${port}`);
-});
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/bookings', bookingsRoutes);
+apiRouter.use('/events', eventsRoutes);
+apiRouter.use('/tasks', tasksRoutes);
+apiRouter.use('/artists', artistsRoutes);
+apiRouter.use('/documents', documentsRoutes);
+apiRouter.use('/users', usersRoutes);
+apiRouter.use('/technical', technicalRoutes);
+apiRouter.use('/hospitality', hospitalityRoutes);
+apiRouter.use('/admin', adminRoutes);
+apiRouter.use('/calendar', calendarRoutes);
+apiRouter.use('/comments', commentsRoutes);
+apiRouter.use('/reminders', remindersRoutes);
+
+app.use('/api', apiRouter);
+
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(Number(port), '0.0.0.0', () => {
+    console.log(`Backend server listening at http://0.0.0.0:${port}`);
+  });
+}
+
+export default app;

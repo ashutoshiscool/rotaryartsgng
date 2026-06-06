@@ -408,7 +408,7 @@ export default function EventWorkspacePage() {
                       ) : catDocs.map(doc => (
                         <a 
                           key={doc.id} 
-                          href={doc.url.startsWith('http') ? doc.url : `http://168.144.16.226:3001${doc.url}`}
+                          href={`${doc.url.startsWith('http') ? doc.url : `http://168.144.16.226:3001${doc.url}`}?download=`}
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="p-5 bg-white border-2 border-gray-50 shadow-sm rounded-2xl flex items-center justify-between group hover:border-black hover:shadow-xl hover:translate-y-[-2px] transition-all cursor-pointer"

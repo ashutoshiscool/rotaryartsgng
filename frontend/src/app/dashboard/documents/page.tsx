@@ -121,9 +121,9 @@ export default function DocumentsPage() {
                   <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-black group-hover:text-white transition-all transform group-hover:rotate-6">
                     <FileText className="w-7 h-7" />
                   </div>
-                  <button className="p-3 bg-gray-50 rounded-xl hover:bg-black hover:text-white transition-all">
+                  <a href={`${doc.url}?download=`} target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-50 rounded-xl hover:bg-black hover:text-white transition-all">
                     <Download className="w-5 h-5" />
-                  </button>
+                  </a>
                 </div>
                 <h3 className="text-lg font-black uppercase tracking-tighter text-gray-900 group-hover:italic transition-all mb-2 leading-tight truncate">{doc.name}</h3>
                 <div className="flex flex-wrap items-center gap-2 mb-6">
