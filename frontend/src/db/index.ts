@@ -3,8 +3,9 @@ import { Pool } from 'pg';
 import * as schema from './schema';
 
 
+const connectionString = process.env.DATABASE_URL?.replace('?sslmode=require', '');
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   ssl: { rejectUnauthorized: false }
 });
 
