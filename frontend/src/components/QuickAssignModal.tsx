@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import { getUsers } from '@/app/actions/users';
+import { getEvents, createEvent } from '@/app/actions/events';
+import { createTask } from '@/app/actions/tasks';
 import { Loader2, CheckSquare, Calendar as CalIcon, User, Layers, X } from 'lucide-react';
 
 interface QuickAssignModalProps {
@@ -34,11 +36,11 @@ export default function QuickAssignModal({ isOpen, onClose, selectedDate, onSucc
       const fetchData = async () => {
         try {
           const [uRes, eRes] = await Promise.all([
-            api.get('/users'),
-            api.get('/events')
+            getUsers(),
+            getEvents()
           ]);
-          setUsers(uRes.data);
-          setEvents(eRes.data);
+          setUsers(uRes.data || []);
+          setEvents(eRes.data || []);
         } catch (err) {
           console.error(err);
         }
@@ -54,7 +56,7 @@ export default function QuickAssignModal({ isOpen, onClose, selectedDate, onSucc
 
     try {
       if (type === 'task') {
-        await api.post('/tasks', {
+        await createTask({
           title: formData.title,
           date: selectedDate,
           deadline: selectedDate,
@@ -62,12 +64,11 @@ export default function QuickAssignModal({ isOpen, onClose, selectedDate, onSucc
           eventId: formData.eventId ? parseInt(formData.eventId) : null,
         });
       } else {
-        await api.post('/events', {
+        await createEvent({
           title: formData.title,
           date: selectedDate,
           status: 'Upcoming',
-          assignedUserIds: selectedUserIds
-        });
+        }, selectedUserIds);
       }
       onSuccess();
       onClose();

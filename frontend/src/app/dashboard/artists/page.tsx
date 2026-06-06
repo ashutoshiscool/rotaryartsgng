@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getArtists, createArtist } from '@/app/actions/artists';
 import { Loader2, UserPlus, Mail, Phone, Music2, Star } from 'lucide-react';
 import Modal from '@/components/Modal';
 
@@ -20,8 +20,9 @@ export default function ArtistsPage() {
   const fetchArtists = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/artists');
-      setArtists(data);
+      const res = await getArtists();
+      if (res.error) throw new Error(res.error);
+      setArtists(res.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -33,7 +34,8 @@ export default function ArtistsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post('/artists', formData);
+      const res = await createArtist(formData);
+      if (res.error) throw new Error(res.error);
       setIsModalOpen(false);
       setFormData({ name: '', genre: '', email: '', phone: '' });
       await fetchArtists();

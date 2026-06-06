@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getHospitalityList, updateHospitality } from '@/app/actions/hospitality';
 import { Loader2, Hotel, Plane, Car, Info, Calendar, LayoutGrid, CheckCircle2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -15,7 +15,8 @@ export default function HospitalityHubPage() {
 
   const fetchHosp = async () => {
     try {
-      const { data } = await api.get('/hospitality');
+      const res = await getHospitalityList();
+      const data = res.data || [];
       setHospRecords(data);
       if (data.length > 0 && selectedId === null) {
         setSelectedId(data[0].id);
@@ -26,7 +27,7 @@ export default function HospitalityHubPage() {
 
   const updateHosp = async (id: number, payload: any) => {
     try {
-      await api.put(`/hospitality/${id}`, payload);
+      await updateHospitality(id, payload);
       setHospRecords(prev => prev.map(r => r.id === id ? { ...r, ...payload } : r));
     } catch (err) { console.error(err); }
   };

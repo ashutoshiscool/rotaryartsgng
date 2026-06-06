@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getCalendarItems } from '@/app/actions/calendar';
 import { Loader2, ChevronLeft, ChevronRight, Calendar as CalIcon, Ticket, CheckSquare } from 'lucide-react';
 
 const TYPE_COLORS: Record<string, string> = {
@@ -38,8 +38,8 @@ export default function Calendar({
 
   const fetchCalendar = async () => {
     try {
-      const { data } = await api.get('/calendar');
-      setItems(data);
+      const res = await getCalendarItems();
+      setItems(res.data || []);
     } catch (err) {
       console.error(err);
     } finally {

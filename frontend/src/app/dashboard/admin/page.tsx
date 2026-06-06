@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getUsers, createUser } from '@/app/actions/users';
+import { getActivityLogs, getSystemSettings, getAdminStats, deleteUser, updateSystemSettings } from '@/app/actions/admin';
 import { Loader2, ShieldAlert, UserPlus, ShieldCheck, User as UserIcon, Settings, Activity, Database, Trash2, Save } from 'lucide-react';
 import Modal from '@/components/Modal';
 
@@ -25,18 +26,21 @@ export default function AdminPage() {
   const fetchAll = async () => {
     try {
       const [usersRes, logsRes, settingsRes, statsRes] = await Promise.all([
-        api.get('/users'),
-        api.get('/admin/logs').catch(() => ({ data: [] })),
-        api.get('/admin/settings').catch(() => ({ data: null })),
-        api.get('/admin/stats').catch(() => ({ data: null })),
+        getUsers(),
+        getActivityLogs(),
+        getSystemSettings(),
+        getAdminStats(),
       ]);
       setUsers(usersRes.data);
       setLogs(logsRes.data);
       setSettings(settingsRes.data);
       setGlobalStats(statsRes.data);
+      if (usersRes.error) setError(usersRes.error);
+      else if (logsRes.error) setError(logsRes.error);
+      else if (settingsRes.error) setError(settingsRes.error);
+      else if (statsRes.error) setError(statsRes.error);
     } catch (err: any) {
-      if (err.response?.status === 403) setError('Access denied. General Manager only.');
-      else console.error(err);
+      setError(err.message || String(err));
     } finally { setLoading(false); }
   };
 
@@ -44,32 +48,35 @@ export default function AdminPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post('/users', formData);
+      const resCreate = await createUser(formData);
+      if (resCreate.error) throw new Error(resCreate.error);
       setIsModalOpen(false);
       setFormData({ name: '', email: '', password: '', role: 'Project Manager' });
-      const res = await api.get('/users');
-      setUsers(res.data);
+      const res = await getUsers();
+      setUsers(res.data || []);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to create user');
+      alert(err.message || 'Failed to create user');
     } finally { setIsSubmitting(false); }
   };
 
   const handleDeleteUser = async (id: number) => {
     if (!confirm('Delete this user permanently?')) return;
     try {
-      await api.delete(`/admin/users/${id}`);
+      const res = await deleteUser(id);
+      if (res.error) throw new Error(res.error);
       setUsers(prev => prev.filter(u => u.id !== id));
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to delete');
+      alert(err.message || 'Failed to delete');
     }
   };
 
   const handleSaveSettings = async () => {
     try {
-      const res = await api.put('/admin/settings', settings);
+      const res = await updateSystemSettings(settings);
+      if (res.error) throw new Error(res.error);
       setSettings(res.data);
       alert('Settings saved!');
-    } catch (err) { console.error(err); }
+    } catch (err: any) { console.error(err); alert(err.message); }
   };
 
   if (error) {

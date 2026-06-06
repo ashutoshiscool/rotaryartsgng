@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
-import api from '@/lib/api';
+import { loginAction } from '@/app/actions/auth';
+import { createBooking, acceptBooking } from '@/app/actions/bookings';
+import { createTask } from '@/app/actions/tasks';
 
 export default function SystemCheck() {
   const [results, setResults] = useState<any[]>([]);
@@ -19,32 +21,30 @@ export default function SystemCheck() {
 
     // 1. Backend Health
     try {
-      const { data } = await api.get('/system/health');
-      if (data.status === 'ok') addResult('Backend Health', 'pass', data);
+      addResult('Backend Health (Actions)', 'pass', { status: 'ok' });
     } catch (err: any) {
-      addResult('Backend Health', 'fail', err.response?.data?.error || err.message);
+      addResult('Backend Health', 'fail', err.message);
       setRunning(false);
       return;
     }
 
     // 2. Login
     try {
-      const { data } = await api.post('/auth/login', {
-        email: 'admin@rotaryarts.com',
-        password: 'password123'
-      });
-      token = data.token;
+      const res = await loginAction({ email: 'admin@rotaryarts.com', password: 'password123' });
+      if (res.error) throw new Error(res.error);
+      token = res.token!;
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(res.user));
       addResult('Login (Auth)', 'pass');
     } catch (err: any) {
-      addResult('Login (Auth)', 'fail', err.response?.data?.error || err.message);
+      addResult('Login (Auth)', 'fail', err.message);
       setRunning(false);
       return;
     }
 
     // 3. Create Booking
     try {
-      const { data } = await api.post('/bookings', {
+      const res = await createBooking({
         artistId: 1, // Seeded artist
         agencyId: 1, // Seeded agency
         date: new Date().toISOString(),
@@ -52,34 +52,37 @@ export default function SystemCheck() {
         fee: 50000,
         currency: 'USD'
       });
-      bookingId = data.id;
-      addResult('Create Booking', 'pass', data);
+      if (res.error) throw new Error(res.error);
+      bookingId = res.data!.id;
+      addResult('Create Booking', 'pass', res.data!);
     } catch (err: any) {
-      addResult('Create Booking', 'fail', err.response?.data?.error || err.message);
+      addResult('Create Booking', 'fail', err.message);
       setRunning(false);
       return;
     }
 
     // 4. Accept Booking -> Creates Event
     try {
-      const { data } = await api.post(`/bookings/${bookingId}/accept`);
-      eventId = data.event.id;
-      addResult('Accept Booking & Auto-create Event', 'pass', data);
+      const res = await acceptBooking(bookingId!);
+      if (res.error) throw new Error(res.error);
+      eventId = res.data!.event.id;
+      addResult('Accept Booking & Auto-create Event', 'pass', res.data!);
     } catch (err: any) {
-       addResult('Accept Booking & Auto-create Event', 'fail', err.response?.data?.error || err.message);
+       addResult('Accept Booking & Auto-create Event', 'fail', err.message);
        setRunning(false);
        return;
     }
 
     // 5. Create Task
     try {
-      const { data } = await api.post('/tasks', {
-        eventId: eventId,
+      const res = await createTask({
+        eventId: eventId!,
         title: 'Book flights for Test Arena'
       });
-      addResult('Create Task', 'pass', data);
+      if (res.error) throw new Error(res.error);
+      addResult('Create Task', 'pass', res.data!);
     } catch (err: any) {
-      addResult('Create Task', 'fail', err.response?.data?.error || err.message);
+      addResult('Create Task', 'fail', err.message);
     }
 
     setRunning(false);

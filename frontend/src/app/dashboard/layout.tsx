@@ -2,7 +2,7 @@
 import { ReactNode, useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { getReminders } from '@/app/actions/reminders';
 import { 
   Calendar, 
   LayoutDashboard, 
@@ -63,8 +63,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const fetchReminders = useCallback(async () => {
     try {
-      const res = await api.get('/reminders');
-      setReminders(res.data.filter((r: any) => r.isCompleted === 0));
+      const res = await getReminders();
+      setReminders((res.data || []).filter((r: any) => r.isCompleted === 0));
     } catch (err) { console.error(err); }
   }, []);
 

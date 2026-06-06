@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { loginAction } from '@/app/actions/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,12 +18,15 @@ export default function LoginPage() {
     setError('');
     
     try {
-      const { data } = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      const res = await loginAction({ email, password });
+      if (res.error) {
+        throw new Error(res.error);
+      }
+      localStorage.setItem('token', res.token as string);
+      localStorage.setItem('user', JSON.stringify(res.user));
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Failed to login');
+      setError(err.message || 'Failed to login');
       setLoading(false);
     }
   };

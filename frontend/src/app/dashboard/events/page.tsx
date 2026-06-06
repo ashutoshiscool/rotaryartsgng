@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getEvents } from '@/app/actions/events';
 import Link from 'next/link';
 import { Loader2, Calendar as CalIcon, Activity, CheckCircle2, ArrowRight } from 'lucide-react';
 
@@ -12,8 +12,8 @@ export default function EventsPage() {
 
   const fetchEvents = async () => {
     try {
-      const { data } = await api.get('/events');
-      setEvents(data);
+      const res = await getEvents();
+      setEvents(res.data || []);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };

@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getBookings } from '@/app/actions/bookings';
+import { getEvents } from '@/app/actions/events';
+import { getTasks } from '@/app/actions/tasks';
+import { getDocuments } from '@/app/actions/documents';
 import { Ticket, Calendar as CalIcon, CheckSquare, FileText, Activity, Clock, Loader2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import Calendar from '@/components/Calendar';
@@ -19,18 +22,18 @@ export default function Dashboard() {
       try {
         const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
         const [b, e, t, d] = await Promise.all([
-          api.get('/bookings').catch(() => ({ data: [] })),
-          api.get('/events').catch(() => ({ data: [] })),
-          api.get('/tasks').catch(() => ({ data: [] })),
-          api.get('/documents').catch(() => ({ data: [] })),
+          getBookings().catch(() => ({ data: [] })),
+          getEvents().catch(() => ({ data: [] })),
+          getTasks().catch(() => ({ data: [] })),
+          getDocuments().catch(() => ({ data: [] })),
         ]);
         setStats({ 
-          bookings: b.data.length, 
-          events: e.data.length, 
-          tasks: t.data.length, 
-          documents: d.data.length 
+          bookings: b.data?.length || 0, 
+          events: e.data?.length || 0, 
+          tasks: t.data?.length || 0, 
+          documents: d.data?.length || 0 
         });
-        setMyTasks(t.data.filter((task: any) => task.assignedTo === storedUser.id && task.status !== 'Done'));
+        setMyTasks((t.data || []).filter((task: any) => task.assignedTo === storedUser.id && task.status !== 'Done'));
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };

@@ -1,7 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import api from '@/lib/api';
+import { getEventById, updateEvent, deleteEvent, getEventAssignments, addEventAssignment, removeEventAssignment } from '@/app/actions/events';
+import { getEventTechnicalItems, createTechnicalItem, deleteTechnicalItem } from '@/app/actions/technical';
+import { getHospitalityByEventId, updateHospitality, createHospitalityRoom, deleteHospitalityRoom } from '@/app/actions/hospitality';
+import { getEventTasks } from '@/app/actions/tasks';
+import { getComments, createComment } from '@/app/actions/comments';
+import { getDocuments, uploadDocument } from '@/app/actions/documents';
+import { getUsers } from '@/app/actions/users';
 import { Loader2, ArrowLeft, Calendar, Wrench, Hotel, FileText, DollarSign, Plus, CheckSquare, MessageSquare, Send, Plane, Car, Info, Paperclip, Download, ArrowRight, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import Modal from '@/components/Modal';
@@ -44,37 +50,41 @@ export default function EventWorkspacePage() {
   const fetchAll = async () => {
     try {
       const [eventRes, techRes, hospRes, taskRes, commentRes, docRes, assignRes, userRes] = await Promise.all([
-        api.get(`/events/${eventId}`),
-        api.get(`/technical/event/${eventId}`).catch(() => ({ data: [] })),
-        api.get(`/hospitality/event/${eventId}`).catch(() => ({ data: null })),
-        api.get(`/tasks/event/${eventId}`).catch(() => ({ data: [] })),
-        api.get(`/comments/event/${eventId}`).catch(() => ({ data: [] })),
-        api.get(`/documents`).catch(() => ({ data: [] })),
-        api.get(`/events/${eventId}/assignments`).catch(() => ({ data: [] })),
-        api.get(`/users`).catch(() => ({ data: [] })),
+        getEventById(eventId),
+        getEventTechnicalItems(eventId),
+        getHospitalityByEventId(eventId),
+        getEventTasks(eventId),
+        getComments('event', eventId),
+        getDocuments(),
+        getEventAssignments(eventId),
+        getUsers(),
       ]);
       setEvent(eventRes.data);
-      setTech(techRes.data);
+      setTech(techRes.data || []);
       setHosp(hospRes.data);
-      setTasks(taskRes.data);
-      setComments(commentRes.data);
-      setDocs(docRes.data.filter((d: any) => d.eventId === eventId));
-      setAssignments(assignRes.data);
-      setAllUsers(userRes.data);
+      setTasks(taskRes.data || []);
+      setComments(commentRes.data || []);
+      setDocs((docRes.data || []).filter((d: any) => d.eventId === eventId));
+      setAssignments(assignRes.data || []);
+      setAllUsers(userRes.data || []);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
   const handleUploadDoc = async (payload: any) => {
     try {
-      await api.post('/documents', payload);
+      const formData = new FormData();
+      Object.keys(payload).forEach(key => {
+        formData.append(key, payload[key]);
+      });
+      await uploadDocument(formData);
       // Refresh both docs and tasks as a linked task might have been created
       const [docRes, taskRes] = await Promise.all([
-        api.get('/documents'),
-        api.get(`/tasks/event/${eventId}`)
+        getDocuments(),
+        getEventTasks(eventId)
       ]);
-      setDocs(docRes.data.filter((d: any) => d.eventId === eventId));
-      setTasks(taskRes.data);
+      setDocs((docRes.data || []).filter((d: any) => d.eventId === eventId));
+      setTasks(taskRes.data || []);
     } catch (err) {
       console.error(err);
       throw err;
@@ -83,22 +93,22 @@ export default function EventWorkspacePage() {
 
   const handleAssign = async (userId: number) => {
     try {
-      await api.post(`/events/${eventId}/assignments`, { userId });
-      const res = await api.get(`/events/${eventId}/assignments`);
-      setAssignments(res.data);
+      await addEventAssignment(eventId, userId);
+      const res = await getEventAssignments(eventId);
+      setAssignments(res.data || []);
     } catch (err) { console.error(err); }
   };
 
   const handleUnassign = async (userId: number) => {
     try {
-      await api.delete(`/events/${eventId}/assignments/${userId}`);
+      await removeEventAssignment(eventId, userId);
       setAssignments(assignments.filter(a => a.userId !== userId));
     } catch (err) { console.error(err); }
   };
 
-  const updateEvent = async (field: string, value: string) => {
+  const handleUpdateEvent = async (field: string, value: string) => {
     try {
-      await api.put(`/events/${eventId}`, { [field]: value });
+      await updateEvent(eventId, { [field]: value });
       setEvent({ ...event, [field]: value });
     } catch (err) { console.error(err); }
   };
@@ -107,19 +117,19 @@ export default function EventWorkspacePage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/technical', { ...techForm, eventId });
+      await createTechnicalItem({ ...techForm, eventId });
       setTechModalOpen(false);
       setTechForm({ category: 'Stage', name: '', specs: '', quantity: 1, cost: 0 });
-      const res = await api.get(`/technical/event/${eventId}`);
-      setTech(res.data);
+      const res = await getEventTechnicalItems(eventId);
+      setTech(res.data || []);
     } catch (err) { console.error(err); }
     finally { setSubmitting(false); }
   };
 
-  const updateHospitality = async (payload: any) => {
+  const handleUpdateHospitality = async (payload: any) => {
     if (!hosp) return;
     try {
-      await api.put(`/hospitality/${hosp.id}`, payload);
+      await updateHospitality(hosp.id, payload);
       setHosp({ ...hosp, ...payload });
     } catch (err) { console.error(err); }
   };
@@ -127,17 +137,17 @@ export default function EventWorkspacePage() {
   const addComment = async () => {
     if (!commentText.trim()) return;
     try {
-      await api.post('/comments', { entityType: 'event', entityId: eventId, content: commentText });
+      await createComment({ entityType: 'event', entityId: eventId, content: commentText });
       setCommentText('');
-      const res = await api.get(`/comments/event/${eventId}`);
-      setComments(res.data);
+      const res = await getComments('event', eventId);
+      setComments(res.data || []);
     } catch (err) { console.error(err); }
   };
 
   const handleDeleteEvent = async () => {
     if (!confirm('PERMANENT DELETION: This will erase all event data, technical riders, and logs. This action cannot be undone. Continue?')) return;
     try {
-      await api.delete(`/events/${eventId}`);
+      await deleteEvent(eventId);
       window.location.href = '/dashboard/events';
     } catch (err) { console.error(err); alert('Deletion failed'); }
   };
@@ -145,16 +155,16 @@ export default function EventWorkspacePage() {
   const handleDeleteTechItem = async (id: number) => {
     if (!confirm('Remove this requirement from the technical rider?')) return;
     try {
-      await api.delete(`/technical/${id}`);
-      const res = await api.get(`/technical/event/${eventId}`);
-      setTech(res.data);
+      await deleteTechnicalItem(id);
+      const res = await getEventTechnicalItems(eventId);
+      setTech(res.data || []);
     } catch (err) { console.error(err); }
   };
 
   const handleAddRoom = async (roomType: string, guestName: string) => {
     try {
-      await api.post('/hospitality/rooms', { hospitalityId: hosp.id, roomType, guestName });
-      const res = await api.get(`/hospitality/event/${eventId}`);
+      await createHospitalityRoom(hosp.id, roomType, guestName);
+      const res = await getHospitalityByEventId(eventId);
       setHosp(res.data);
     } catch (err) { console.error(err); }
   };
@@ -162,7 +172,7 @@ export default function EventWorkspacePage() {
   const handleDeleteRoom = async (id: number) => {
     if (!confirm('Delete this room allocation?')) return;
     try {
-      await api.delete(`/hospitality/rooms/${id}`);
+      await deleteHospitalityRoom(id);
       setHosp({ ...hosp, rooms: hosp.rooms.filter((r: any) => r.id !== id) });
     } catch (err) { console.error(err); }
   };
@@ -196,7 +206,7 @@ export default function EventWorkspacePage() {
             <h1 className="text-xl sm:text-2xl font-black tracking-tight truncate text-gray-900 uppercase italic">{event.title}</h1>
             <select 
               value={event.organization || ''} 
-              onChange={(e) => updateEvent('organization', e.target.value)}
+              onChange={(e) => handleUpdateEvent('organization', e.target.value)}
               className="text-[10px] font-black uppercase tracking-widest bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-4 focus:ring-black/5 cursor-pointer hover:bg-white transition-all"
             >
               <option value="">Select Brand</option>
@@ -277,7 +287,7 @@ export default function EventWorkspacePage() {
                     <textarea 
                       placeholder="Input flight numbers, airline, connection times and confirmation codes..."
                       defaultValue={hosp.travelFlights || ''} 
-                      onBlur={e => updateHospitality({ travelFlights: e.target.value })}
+                      onBlur={e => handleUpdateHospitality({ travelFlights: e.target.value })}
                       className="w-full px-6 py-5 rounded-3xl border-2 border-blue-100 bg-white text-sm font-bold text-blue-900 placeholder:text-blue-200 focus:outline-none focus:ring-8 focus:ring-blue-500/5 min-h-[120px] transition-all" 
                     />
                   </div>
@@ -296,7 +306,7 @@ export default function EventWorkspacePage() {
                       <input 
                         placeholder="Driver Name / Mobile"
                         defaultValue={hosp.groundDriverContact || ''} 
-                        onBlur={e => updateHospitality({ groundDriverContact: e.target.value })}
+                        onBlur={e => handleUpdateHospitality({ groundDriverContact: e.target.value })}
                         className="w-full px-5 py-4 rounded-2xl border-2 border-emerald-100 bg-white text-sm font-bold text-emerald-900 placeholder:text-emerald-200 focus:outline-none focus:ring-8 focus:ring-emerald-500/5 transition-all" 
                       />
                     </div>
@@ -305,7 +315,7 @@ export default function EventWorkspacePage() {
                       <input 
                         placeholder="Airport -> Hotel -> Venue"
                         defaultValue={hosp.groundRoute || ''} 
-                        onBlur={e => updateHospitality({ groundRoute: e.target.value })}
+                        onBlur={e => handleUpdateHospitality({ groundRoute: e.target.value })}
                         className="w-full px-5 py-4 rounded-2xl border-2 border-emerald-100 bg-white text-sm font-bold text-emerald-900 placeholder:text-emerald-200 focus:outline-none focus:ring-8 focus:ring-emerald-500/5 transition-all" 
                       />
                     </div>
@@ -314,7 +324,7 @@ export default function EventWorkspacePage() {
                       <input 
                         placeholder="e.g. 14:00 (Local Time)"
                         defaultValue={hosp.groundTime || ''} 
-                        onBlur={e => updateHospitality({ groundTime: e.target.value })}
+                        onBlur={e => handleUpdateHospitality({ groundTime: e.target.value })}
                         className="w-full px-5 py-4 rounded-2xl border-2 border-emerald-100 bg-white text-sm font-bold text-emerald-900 placeholder:text-emerald-200 focus:outline-none focus:ring-8 focus:ring-emerald-500/5 transition-all" 
                       />
                     </div>
@@ -333,7 +343,7 @@ export default function EventWorkspacePage() {
                       <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Hotel Selection</label>
                       <input 
                         defaultValue={hosp.hotelName || ''} 
-                        onBlur={e => updateHospitality({ hotelName: e.target.value })}
+                        onBlur={e => handleUpdateHospitality({ hotelName: e.target.value })}
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-8 focus:ring-black/5" 
                       />
                     </div>
@@ -342,7 +352,7 @@ export default function EventWorkspacePage() {
                       <textarea 
                         placeholder="Water requirements, towel counts, dressing room setup..."
                         defaultValue={hosp.amenities || ''} 
-                        onBlur={e => updateHospitality({ amenities: e.target.value })}
+                        onBlur={e => handleUpdateHospitality({ amenities: e.target.value })}
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white text-sm font-bold text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-8 focus:ring-black/5 min-h-[100px]" 
                       />
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getBookings, updateBooking, deleteBooking, createBooking } from '@/app/actions/bookings';
 import { CheckCircle2, Clock, MapPin, User, Loader2, Plus, ArrowRight, XCircle, LayoutGrid, List } from 'lucide-react';
 import Modal from '@/components/Modal';
 import Link from 'next/link';
@@ -33,7 +33,7 @@ export default function BookingsPage() {
   useEffect(() => { fetchBookings(); }, []);
 
   const fetchBookings = async () => {
-    try { const { data } = await api.get('/bookings'); setBookings(data); }
+    try { const res = await getBookings(); setBookings(res.data || []); }
     catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -41,7 +41,7 @@ export default function BookingsPage() {
   const handleStatusUpdate = async (id: number, status: string) => {
     setProcessingId(id);
     try { 
-      await api.put(`/bookings/${id}`, { status }); 
+      await updateBooking(id, { status }); 
       await fetchBookings(); 
     }
     catch (err) { console.error(err); alert('Failed to update status'); }
@@ -51,11 +51,12 @@ export default function BookingsPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('Permanent deletion will remove this booking and any associated event. Continue?')) return;
     try {
-      await api.delete(`/bookings/${id}`);
+      const res = await deleteBooking(id);
+      if (res.error) throw new Error(res.error);
       await fetchBookings();
     } catch (err: any) { 
       console.error(err); 
-      const msg = err.response?.data?.error || 'Deletion failed';
+      const msg = err.message || 'Deletion failed';
       alert(`Error: ${msg}`); 
     }
   };
@@ -83,7 +84,8 @@ export default function BookingsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post('/bookings', { ...formData, date: new Date(formData.date).toISOString() });
+      const res = await createBooking({ ...formData, date: new Date(formData.date).toISOString() });
+      if (res.error) throw new Error(res.error);
       setIsModalOpen(false);
       setFormData({ 
         artistName: '', agencyName: '', agentName: '', brand: '', venue: '', status: 'Pending',
@@ -91,7 +93,7 @@ export default function BookingsPage() {
         metrics: { youtube: 0, spotify: 0, instagram: 0 } 
       });
       await fetchBookings();
-    } catch (err) { console.error(err); alert('Failed'); }
+    } catch (err: any) { console.error(err); alert(`Failed: ${err.message}`); }
     finally { setIsSubmitting(false); }
   };
 
@@ -99,11 +101,12 @@ export default function BookingsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.put(`/bookings/${editingBooking.id}`, { ...formData, date: new Date(formData.date).toISOString() });
+      const res = await updateBooking(editingBooking.id, { ...formData, date: new Date(formData.date).toISOString() });
+      if (res.error) throw new Error(res.error);
       setIsEditModalOpen(false);
       setEditingBooking(null);
       await fetchBookings();
-    } catch (err) { console.error(err); alert('Update failed'); }
+    } catch (err: any) { console.error(err); alert(`Update failed: ${err.message}`); }
     finally { setIsSubmitting(false); }
   };
 

@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getTasks, createTask, updateTask, deleteTask } from '@/app/actions/tasks';
+import { getEvents } from '@/app/actions/events';
+import { getUsers } from '@/app/actions/users';
 import { Loader2, Plus, CheckSquare, Clock, CircleDot, Trash2, Calendar, LayoutGrid, ListFilter, Users, Pencil } from 'lucide-react';
 import Modal from '@/components/Modal';
 
@@ -27,20 +29,20 @@ export default function TasksPage() {
     const fetchData = async () => {
       try {
         const [taskRes, eventRes, userRes] = await Promise.all([
-          api.get('/tasks'),
-          api.get('/events'),
-          api.get('/users').catch(() => ({ data: [] }))
+          getTasks(),
+          getEvents(),
+          getUsers()
         ]);
-        setTasks(taskRes.data);
-        setEvents(eventRes.data);
-        setTeam(userRes.data);
+        setTasks(taskRes.data || []);
+        setEvents(eventRes.data || []);
+        setTeam(userRes.data || []);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
     fetchData();
   }, []);
 
-  const fetchTasks = async () => { try { const { data } = await api.get('/tasks'); setTasks(data); } catch (err) { console.error(err); } };
+  const fetchTasks = async () => { try { const res = await getTasks(); setTasks(res.data || []); } catch (err) { console.error(err); } };
 
   const startEdit = (task: any) => {
     setEditingTask(task);
@@ -71,9 +73,9 @@ export default function TasksPage() {
       payload.assignedTo = formData.assignedTo || null;
 
       if (editingTask) {
-        await api.put(`/tasks/${editingTask.id}`, payload);
+        await updateTask(editingTask.id, payload);
       } else {
-        await api.post('/tasks', payload);
+        await createTask(payload);
       }
       
       closeModal();
@@ -82,11 +84,11 @@ export default function TasksPage() {
     finally { setIsSubmitting(false); }
   };
 
-  const updateStatus = async (id: number, status: string) => { try { await api.put(`/tasks/${id}`, { status }); setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t)); } catch (err) { console.error(err); } };
-  const deleteTask = async (id: number) => { 
+  const updateStatus = async (id: number, status: string) => { try { await updateTask(id, { status }); setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t)); } catch (err) { console.error(err); } };
+  const handleDeleteTask = async (id: number) => { 
     if (!confirm('Permanent deletion: confirm task erasure?')) return;
     try { 
-      await api.delete(`/tasks/${id}`); 
+      await deleteTask(id); 
       setTasks(prev => prev.filter(t => t.id !== id)); 
     } catch (err) { console.error(err); } 
   };
@@ -188,7 +190,7 @@ export default function TasksPage() {
                       <button onClick={() => startEdit(task)} className="p-2.5 text-gray-300 hover:text-black hover:bg-black/5 rounded-xl transition-all">
                         <Pencil className="w-5 h-5" />
                       </button>
-                      <button onClick={() => deleteTask(task.id)} className="p-2.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                      <button onClick={() => handleDeleteTask(task.id)} className="p-2.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>

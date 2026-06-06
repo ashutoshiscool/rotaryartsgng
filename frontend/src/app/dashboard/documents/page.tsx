@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { getDocuments, uploadDocument } from '@/app/actions/documents';
+import { getEvents } from '@/app/actions/events';
 import { Loader2, FileText, UploadCloud, Download, FileType2, Tag, Filter, Calendar, LayoutGrid, Search } from 'lucide-react';
 import Modal from '@/components/Modal';
 
@@ -18,11 +19,11 @@ export default function DocumentsPage() {
     const fetchData = async () => {
       try {
         const [docRes, eventRes] = await Promise.all([
-          api.get('/documents'),
-          api.get('/events')
+          getDocuments(),
+          getEvents()
         ]);
-        setDocuments(docRes.data);
-        setEvents(eventRes.data);
+        setDocuments(docRes.data || []);
+        setEvents(eventRes.data || []);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
@@ -30,18 +31,26 @@ export default function DocumentsPage() {
   }, []);
 
   const fetchDocuments = async () => {
-    try { const { data } = await api.get('/documents'); setDocuments(data); } catch (err) { console.error(err); }
+    try { const res = await getDocuments(); setDocuments(res.data || []); } catch (err) { console.error(err); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post('/documents', { ...formData, eventId: formData.eventId || null });
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('category', formData.category);
+      if (formData.eventId) data.append('eventId', String(formData.eventId));
+      data.append('url', formData.url);
+      
+      const res = await uploadDocument(data);
+      if (res.error) throw new Error(res.error);
+      
       setIsModalOpen(false);
       setFormData({ name: '', category: 'Other', eventId: 0, url: '#' });
       await fetchDocuments();
-    } catch (err) { console.error(err); alert('Failed'); }
+    } catch (err: any) { console.error(err); alert(`Failed: ${err.message}`); }
     finally { setIsSubmitting(false); }
   };
 
