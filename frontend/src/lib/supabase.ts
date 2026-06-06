@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import path from 'path';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.ROTARY_SUPABASE_URL || 'https://hrwgpdifxzszcgdzhunr.supabase.co';
+const supabaseKey = process.env.ROTARY_SUPABASE_ANON_KEY || 'sb_publishable_lSAJ_ZBzDk5RkTXKc8zt1Q_gra0FGpA';
 
 if (!supabaseUrl || !supabaseKey) {
   console.warn("WARNING: SUPABASE_URL and SUPABASE_ANON_KEY must be provided in the environment variables.");
