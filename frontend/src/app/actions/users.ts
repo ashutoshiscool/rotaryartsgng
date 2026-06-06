@@ -1,6 +1,6 @@
 'use server';
 
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { requireRole } from '@/lib/auth';

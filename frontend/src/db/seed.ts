@@ -1,6 +1,6 @@
 import { db } from './index';
 import { users, artists, agencies, companies } from './schema';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 async function seed() {
   console.log('Seeding data...');

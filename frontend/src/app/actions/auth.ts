@@ -1,6 +1,6 @@
 'use server';
 
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { db } from '@/db';
@@ -54,11 +54,11 @@ export async function registerAction(data: any) {
     
     return { success: true, token, user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role } };
   } catch (error: any) {
-    return { error: String(error) };
+    console.error("loginAction ERROR:", error); return { error: String(error) };
   }
 }
 
-export async function loginAction(data: any) {
+export async function loginAction(data: any) { console.error("loginAction START");
   try {
     const email = data.email?.trim().toLowerCase();
     const password = data.password?.trim();
@@ -84,7 +84,7 @@ export async function loginAction(data: any) {
     
     return { success: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
   } catch (error: any) {
-    return { error: String(error) };
+    console.error("loginAction ERROR:", error); return { error: String(error) };
   }
 }
 
